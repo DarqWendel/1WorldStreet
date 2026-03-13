@@ -1,0 +1,128 @@
+/**
+ * PRODUTOS — Catálogo com Imagens Locais
+ * As imagens ficam em /public/images/ — caminhos com /images/...
+ * TODO (backend): substitua por fetch('/api/products')
+ */
+
+export const allProductsData = [
+  {
+    id: 1,
+    name: 'Camiseta Fé em Deus (Creme)',
+    price: '119.90',
+    images: ['/images/products/fe-em-deus-creme-frente.webp'],
+    alt: 'Camiseta creme 1W$TrEET Fé em Deus',
+    description: '"1W$TrEET Fé em Deus" na frente e "Sou a prova que a favela venceu!" nas costas. Algodão premium 100%, oversized.',
+    category: 'Camisetas',
+    tags: ['fé em deus', 'favela venceu', 'creme', 'clássico'],
+    availableSizes: ['P', 'M', 'G', 'GG'],
+    colors: ['Creme'],
+  },
+  {
+    id: 2,
+    name: 'Camiseta Fé em Deus (Preta)',
+    price: '119.90',
+    images: ['/images/products/fe-em-deus-preta-frente.webp'],
+    alt: 'Camiseta preta 1W$TrEET Fé em Deus azul',
+    description: '"1W$TrEET Fé em Deus" na frente em azul claro. Algodão premium 100%, oversized.',
+    category: 'Camisetas',
+    tags: ['fé em deus', 'preta', 'azul', 'clássico'],
+    availableSizes: ['P', 'M', 'G', 'GG'],
+    colors: ['Preto'],
+  },
+  {
+    id: 3,
+    name: 'Camiseta Dragão (Vermelha)',
+    price: '149.90',
+    images: [
+      '/images/products/dragao-vermelho-frente.webp',
+      '/images/lookbook/look-11.jpg',
+      '/images/lookbook/look-08.jpg',
+    ],
+    alt: 'Camiseta vermelha com dragão',
+    description: 'Dragão imponente nas costas, logo 1WO na frente. Vermelho intenso, algodão premium.',
+    category: 'Camisetas',
+    tags: ['dragão', 'oriental', 'vermelho'],
+    availableSizes: ['P', 'M', 'G', 'GG'],
+    colors: ['Vermelho'],
+  },
+  {
+    id: 4,
+    name: 'Cropped Dragão (Roxa)',
+    price: '149.90',
+    images: [
+      '/images/products/dragao-roxa-frente.webp',
+      '/images/lookbook/look-13.jpg',
+    ],
+    alt: 'Cropped roxo com dragão nas costas',
+    description: 'Cropped feminino roxo com dragão colorido nas costas. Estilo único e atitude.',
+    category: 'Croppeds',
+    tags: ['dragão', 'roxa', 'cropped', 'feminino'],
+    availableSizes: ['P', 'M', 'G'],
+    colors: ['Roxo'],
+  },
+  {
+    id: 5,
+    name: 'Camiseta World (Verde)',
+    price: '129.90',
+    images: [
+      '/images/products/world-verde-frente.webp',
+      '/images/lookbook/look-04.jpg',
+    ],
+    alt: 'Camiseta verde com estampa World oval',
+    description: 'Estampa oval "World" em verde musgo. Estilo urbano e versátil.',
+    category: 'Camisetas',
+    tags: ['world', 'verde', 'oval'],
+    availableSizes: ['P', 'M', 'G', 'GG'],
+    colors: ['Verde'],
+  },
+  {
+    id: 6,
+    name: 'Camiseta World (Marrom)',
+    price: '129.90',
+    images: [
+      '/images/products/world-marrom-frente.webp',
+      '/images/lookbook/look-04.jpg',
+    ],
+    alt: 'Camiseta marrom com estampa World oval',
+    description: 'Estampa oval "World" em marrom terroso. Combinação urbana e sofisticada.',
+    category: 'Camisetas',
+    tags: ['world', 'marrom', 'oval'],
+    availableSizes: ['P', 'M', 'G', 'GG'],
+    colors: ['Marrom'],
+  },
+  {
+    id: 7,
+    name: 'Camiseta World St. Fogo (Branca)',
+    price: '129.90',
+    images: [
+      '/images/lookbook/look-01.jpg',
+      '/images/lookbook/look-02.jpg',
+      '/images/lookbook/look-03.jpg',
+    ],
+    alt: 'Camiseta branca World Street com estampa fogo',
+    description: '"World" na frente e estampa fogo/globo nas costas. Algodão premium.',
+    category: 'Camisetas',
+    tags: ['world street', 'fogo', 'branco'],
+    availableSizes: ['P', 'M', 'G', 'GG'],
+    colors: ['Branco'],
+  },
+  {
+    id: 8,
+    name: 'Camiseta World Street Monkey',
+    price: '139.90',
+    images: ['/images/lookbook/look-12.jpg'],
+    alt: 'Camiseta World Street Monkey com personagem',
+    description: 'Personagem exclusivo da 1worldstrt. Estampa colorida e vibrante.',
+    category: 'Camisetas',
+    tags: ['monkey', 'personagem', 'colorido'],
+    availableSizes: ['P', 'M', 'G', 'GG'],
+    colors: ['Branco'],
+  },
+];
+
+export const lookbookImages = {
+  hero:    '/images/lookbook/look-05.jpg',
+  drop5_1: '/images/lookbook/look-01.jpg',
+  drop5_2: '/images/lookbook/look-07.jpg',
+  drop5_3: '/images/lookbook/look-11.jpg',
+};

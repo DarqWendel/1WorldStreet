@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   VARIÁVEIS DE COR — edite aqui para mudar toda a paleta
+   ============================================================ */
+:root {
+  --background: 15 8% 7%;
+  --foreground:  35 20% 92%;
+  --card:        15 8% 11%;
+  --card-foreground: 35 15% 90%;
+  --popover:     15 8% 9%;
+  --popover-foreground: 35 20% 92%;
+  --primary:     78 35% 32%;       /* verde oliva */
+  --primary-foreground: 78 20% 96%;
+  --secondary:   32 18% 28%;
+  --secondary-foreground: 32 15% 88%;
+  --muted:       20 8% 18%;
+  --muted-foreground: 30 10% 58%;
+  --accent:      42 90% 52%;       /* amarelo ocre */
+  --accent-foreground: 30 60% 8%;
+  --destructive: 0 65% 52%;
+  --destructive-foreground: 0 0% 98%;
+  --border:      20 8% 22%;
+  --input:       20 8% 15%;
+  --ring:        78 35% 38%;
+  --radius:      0.4rem;
+}
+
+* { @apply border-border; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  @apply bg-background text-foreground;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3,h4,h5,h6 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+h1 { @apply text-5xl; }
+h2 { @apply text-4xl; }
+h3 { @apply text-3xl; }
+
+/* Utilitários globais */
+.section-padding   { @apply py-16 md:py-24; }
+.container-padding { @apply px-4 sm:px-6 lg:px-8; }
+
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,.5);
+}
+
+/* Badge de tag — ex: "DROP 5", "STREET" */
+.badge-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  @apply bg-accent/10 text-accent border border-accent/30 px-2 py-0.5 rounded;
+}
+
+/* Gradiente de fundo para seções hero */
+.gradient-overlay {
+  background: linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background)/.5) 40%, transparent 100%);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: hsl(var(--background)); }
+::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground)/.4); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary)/.7); }
