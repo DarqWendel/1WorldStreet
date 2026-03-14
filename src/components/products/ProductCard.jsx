@@ -6,9 +6,11 @@ import { ArrowRight } from 'lucide-react';
 const ProductCard = ({ product, index, viewMode }) => {
 
   const variants = {
-    hidden:  { opacity: 0, y: 24 },
-    visible: { opacity: 1, y: 0  },
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0 },
   };
+
+  const image = product.images?.[0] || "/images/placeholder.png";
 
   if (viewMode === 'grid') {
     return (
@@ -19,6 +21,7 @@ const ProductCard = ({ product, index, viewMode }) => {
         transition={{ duration: 0.4, delay: index * 0.06 }}
         layout
       >
+
         <Link
           to={`/product/${product.id}`}
           className="group block bg-card rounded-lg overflow-hidden border border-border/40 hover:border-primary/30 transition-all duration-300 card-hover"
@@ -27,8 +30,8 @@ const ProductCard = ({ product, index, viewMode }) => {
           <div className="relative aspect-[3/4] overflow-hidden bg-muted flex items-center justify-center">
 
             <img
-              src={product.images[0]}
-              alt={product.alt}
+              src={image}
+              alt={product.name}
               className="w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-105"
             />
 
@@ -45,7 +48,7 @@ const ProductCard = ({ product, index, viewMode }) => {
           <div className="p-4">
 
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-              {product.category}
+              {product.category || "Produto"}
             </p>
 
             <h3 className="text-sm font-semibold text-foreground mb-2 line-clamp-2">
@@ -65,6 +68,7 @@ const ProductCard = ({ product, index, viewMode }) => {
           </div>
 
         </Link>
+
       </motion.div>
     );
   }
