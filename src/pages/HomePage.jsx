@@ -13,24 +13,28 @@ const heroSlides = [
     label: 'Dragão',
     title: 'FORÇA',
     sub: 'QUE NÃO SE EXPLICA',
+    position: 'center 20%',
   },
   {
     img: '/images/lookbook/look-04.jpg',
     label: 'World',
     title: 'UM MUNDO',
     sub: 'NAS RUAS',
+    position: 'center 30%',
   },
   {
     img: '/images/lookbook/look-10.jpg',
     label: 'Coleção',
     title: 'ATITUDE',
     sub: 'EM CADA DETALHE',
+    position: 'center 15%',
   },
   {
     img: '/images/lookbook/look-09.jpg',
     label: 'Fé em Deus',
     title: 'A FAVELA',
     sub: 'VENCEU',
+    position: 'center 25%',
   },
 ];
 
@@ -98,87 +102,85 @@ const HomePage = () => {
     <div className="text-foreground">
 
       {/* ════════════════════════════════════════════════════
-          HERO — Slideshow cinematográfico fullscreen
+          HERO — Layout editorial: texto + moldura TV
           ════════════════════════════════════════════════════ */}
-      <section className="relative h-screen min-h-[600px] max-h-[1000px] overflow-hidden">
+      <section className="relative h-[calc(100vh-4rem)] md:h-[calc(100vh-5rem)] min-h-[560px] bg-background overflow-hidden flex items-center">
 
-        {/* Imagem de fundo com transição suave */}
-        <AnimatePresence mode="sync">
-          <motion.div
-            key={activeSlide}
-            initial={{ opacity: 0, scale: 1.04 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.9, ease: 'easeInOut' }}
-            className="absolute inset-0"
-          >
-            <img
-              src={slide.img}
-              alt={slide.label}
-              className="w-full h-full object-cover object-top"
-            />
-            {/* Gradiente: escuro embaixo para legibilidade do texto */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-            {/* Gradiente lateral esquerdo */}
-            <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent" />
-          </motion.div>
-        </AnimatePresence>
+        {/* Fundo com gradiente radial sutil */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(var(--primary)/0.12)_0%,_transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_hsl(var(--accent)/0.06)_0%,_transparent_50%)]" />
 
-        {/* Conteúdo textual */}
-        <div className="absolute inset-0 flex flex-col justify-end pb-16 md:pb-24">
-          <div className="container mx-auto container-padding">
+        {/* Layout: texto à esquerda + moldura à direita */}
+        <div className="relative z-10 w-full h-full flex flex-col md:flex-row items-stretch gap-0">
 
-            {/* Badge do slide */}
+          {/* ── Coluna esquerda: texto + elementos street ── */}
+          <div className="relative flex flex-col justify-center flex-shrink-0 w-full md:w-[45%] px-8 md:px-12 lg:px-16 pt-6 md:pt-0 overflow-hidden">
+
+            {/* Número do slide gigante — fundo decorativo estilo magazine */}
             <AnimatePresence mode="wait">
               <motion.div
-                key={`badge-${activeSlide}`}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.4 }}
+                key={`bg-num-${activeSlide}`}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="absolute right-0 bottom-8 select-none pointer-events-none leading-none"
+                style={{
+                  fontFamily: "'Barlow Condensed', sans-serif",
+                  fontSize: 'clamp(10rem, 22vw, 20rem)',
+                  fontWeight: 900,
+                  color: 'transparent',
+                  WebkitTextStroke: '1px rgba(255,255,255,0.04)',
+                  lineHeight: 1,
+                }}
               >
+                0{activeSlide + 1}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Linha vertical accent — detalhe lateral esquerdo */}
+            <div className="absolute left-4 md:left-5 top-1/4 bottom-1/4 w-[2px] bg-gradient-to-b from-transparent via-accent/60 to-transparent" />
+
+            {/* Tag de coleção no topo — estilo etiqueta */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex items-center gap-3 mb-6"
+            >
+              <div className="h-[1px] w-8 bg-accent/60" />
+              <span className="text-[10px] font-black tracking-[0.3em] uppercase text-muted-foreground"
+                style={{ fontFamily: "'Space Mono', monospace" }}>
+                1WORLDSTRT
+              </span>
+              <div className="h-[1px] flex-1 bg-border/40" />
+            </motion.div>
+
+            {/* Badge */}
+            <AnimatePresence mode="wait">
+              <motion.div key={`badge-${activeSlide}`}
+                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.35 }}>
                 <span className="badge-tag mb-4 inline-block">{slide.label}</span>
               </motion.div>
             </AnimatePresence>
 
-            {/* Título principal */}
+            {/* Título */}
             <AnimatePresence mode="wait">
-              <motion.div
-                key={`title-${activeSlide}`}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-              >
-                <h1
-                  className="font-black text-white leading-none mb-1"
-                  style={{
-                    fontFamily: "'Barlow Condensed', sans-serif",
-                    fontSize: 'clamp(4rem, 12vw, 9rem)',
-                    textShadow: '0 4px 32px rgba(0,0,0,0.5)',
-                  }}
-                >
+              <motion.div key={`title-${activeSlide}`}
+                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5, ease: 'easeOut' }}>
+                <h1 className="font-black text-white leading-none mb-2"
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(3.5rem, 7vw, 7rem)', textShadow: '0 4px 32px rgba(0,0,0,0.6)' }}>
                   {slide.title}
                 </h1>
-                <p
-                  className="text-accent font-black tracking-[0.25em] uppercase mb-8"
-                  style={{
-                    fontFamily: "'Barlow Condensed', sans-serif",
-                    fontSize: 'clamp(1.1rem, 3vw, 2rem)',
-                  }}
-                >
+                <p className="text-accent font-black tracking-[0.25em] uppercase mb-8"
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: 'clamp(1rem, 2vw, 1.6rem)' }}>
                   {slide.sub}
                 </p>
               </motion.div>
             </AnimatePresence>
 
             {/* Botões */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap gap-3"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }} className="flex flex-wrap gap-3 mb-10">
               <Button asChild size="lg"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold tracking-widest px-8 h-12">
                 <Link to="/products">VER COLEÇÃO</Link>
@@ -188,33 +190,61 @@ const HomePage = () => {
                 <Link to="/drops" className="flex items-center gap-2">DROPS <ArrowRight className="h-4 w-4" /></Link>
               </Button>
             </motion.div>
+
+            {/* Rodapé do bloco: indicadores + contador */}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                {heroSlides.map((_, i) => (
+                  <button key={i} onClick={() => setActiveSlide(i)}
+                    className={`transition-all duration-300 rounded-full ${i === activeSlide ? 'w-8 h-2 bg-accent' : 'w-2 h-2 bg-white/30 hover:bg-white/60'}`}
+                    aria-label={`Slide ${i + 1}`} />
+                ))}
+              </div>
+              <span className="text-[11px] font-black tracking-widest text-muted-foreground/50 select-none"
+                style={{ fontFamily: "'Space Mono', monospace" }}>
+                0{activeSlide + 1} / 0{heroSlides.length}
+              </span>
+            </div>
           </div>
+
+          {/* ── Coluna direita: foto estilo street/zine ── */}
+          <div className="flex-1 flex items-stretch justify-center h-full min-h-0">
+            <div className="relative w-full h-full overflow-hidden" style={{ clipPath: 'polygon(6% 0%, 100% 0%, 94% 100%, 0% 100%)' }}>
+
+              {/* Imagem com transição */}
+              <AnimatePresence mode="sync">
+                <motion.img
+                  key={activeSlide}
+                  src={slide.img}
+                  alt={slide.label}
+                  initial={{ opacity: 0, scale: 1.06 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.9, ease: 'easeInOut' }}
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                />
+              </AnimatePresence>
+
+              {/* Overlay escuro nas bordas para blend com o fundo */}
+              <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-background/80 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/30 pointer-events-none" />
+
+              {/* Linha decorativa accent no topo */}
+              <div className="absolute top-0 left-[6%] right-0 h-[3px] bg-accent/70 pointer-events-none" />
+              {/* Linha decorativa accent embaixo */}
+              <div className="absolute bottom-0 left-0 right-[6%] h-[3px] bg-primary/60 pointer-events-none" />
+            </div>
+          </div>
+
         </div>
 
-        {/* Indicadores de slide (bolinhas) */}
-        <div className="absolute bottom-6 right-6 md:bottom-8 md:right-8 flex gap-2 z-10">
-          {heroSlides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveSlide(i)}
-              className={`transition-all duration-300 rounded-full ${
-                i === activeSlide
-                  ? 'w-8 h-2 bg-accent'
-                  : 'w-2 h-2 bg-white/40 hover:bg-white/70'
-              }`}
-              aria-label={`Slide ${i + 1}`}
-            />
-          ))}
-        </div>
-
-        {/* Seta scroll down */}
+        {/* Scroll hint — desktop */}
         <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden md:flex flex-col items-center gap-1"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 hidden md:flex flex-col items-center gap-1"
           animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <span className="text-[10px] tracking-widest uppercase text-white/50 font-semibold">scroll</span>
-          <ChevronDown className="h-4 w-4 text-white/50" />
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}>
+          <span className="text-[10px] tracking-widest uppercase text-white/40 font-semibold">scroll</span>
+          <ChevronDown className="h-4 w-4 text-white/40" />
         </motion.div>
       </section>
 

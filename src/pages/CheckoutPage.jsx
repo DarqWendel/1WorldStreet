@@ -1,30 +1,42 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button }      from '@/components/ui/button';
-import { Input }       from '@/components/ui/input';
-import { Label }       from '@/components/ui/label';
-import { motion }      from 'framer-motion';
-import { Lock, MapPin, User, Mail, Phone, ShoppingBag, Copy, Check, QrCode } from 'lucide-react';
-import { CartContext } from '@/contexts/CartContext';
-import { useAuth }     from '@/contexts/AuthContext';
-import { useToast }    from '@/components/ui/use-toast';
-
-// ── Chave PIX da loja (substitua pela real) ───────────────────
-const PIX_KEY  = 'contato@1worldstrt.com';
-const PIX_NAME = '1worldstrt';
+import { Button }        from '@/components/ui/button';
+import { Input }         from '@/components/ui/input';
+import { Label }         from '@/components/ui/label';
+import { motion }        from 'framer-motion';
+import { Lock, MapPin, User, Mail, Phone, ShoppingBag, Copy, Check, QrCode, MessageCircle, AlertTriangle, Clock } from 'lucide-react';
+import { CartContext }   from '@/contexts/CartContext';
+import { useAuth }       from '@/contexts/AuthContext';
+import { useOrders }     from '@/contexts/OrdersContext';
+import { useProducts }   from '@/contexts/ProductsContext';
+import { useStoreConfig } from '@/contexts/StoreConfigContext';
+import { useToast }      from '@/components/ui/use-toast';
 
 const fmt = v => Number(v).toFixed(2).replace('.', ',');
+const RESERVATION_MINUTES = 15;
 
 const CheckoutPage = () => {
-  const { cart, clearCart }    = useContext(CartContext);
-  const { currentUser }        = useAuth();
-  const { toast }              = useToast();
-  const navigate               = useNavigate();
+  const { cart, clearCart }         = useContext(CartContext);
+  const { currentUser }             = useAuth();
+  const { createOrder }             = useOrders();
+  const { reserveCartItems, confirmReservations, cancelReservations } = useProducts();
+  const { config, openWhatsapp }    = useStoreConfig();
+  const { toast }                   = useToast();
+  const navigate                    = useNavigate();
 
-  const [step,    setStep   ] = useState(1); // 1=dados, 2=pix
-  const [copied,  setCopied ] = useState(false);
+  const [step,           setStep          ] = useState(1); // 1=dados, 2=pix
+  const [copied,         setCopied        ] = useState(false);
+  const [orderId,        setOrderId       ] = useState(null);
+  const [reservationIds, setReservationIds] = useState([]);
+  const [reserving,      setReserving     ] = useState(false);
+  const [stockError,     setStockError    ] = useState(null); // itens indisponíveis
+  const [timeLeft,       setTimeLeft      ] = useState(RESERVATION_MINUTES * 60);
+
+  const timerRef    = useRef(null);
+  const canceledRef = useRef(false);
+
   const [formData, setFormData] = useState({
-    name:    currentUser?.name || '',
+    name:    currentUser?.name  || '',
     email:   currentUser?.email || '',
     phone:   '',
     address: '',
@@ -35,6 +47,96 @@ const CheckoutPage = () => {
 
   const total = cart.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0);
 
+  // ── Countdown de 15 min na tela do PIX ────────────────────
+  useEffect(() => {
+    if (step !== 2) return;
+    setTimeLeft(RESERVATION_MINUTES * 60);
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          if (!canceledRef.current) {
+            canceledRef.current = true;
+            cancelReservations(reservationIds);
+            toast({
+              title: 'Tempo esgotado!',
+              description: 'Sua reserva expirou. Os itens foram liberados.',
+              variant: 'destructive',
+            });
+            navigate('/cart');
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [step]);
+
+  const fmtTime = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+  // ── STEP 1 → STEP 2: verificar e reservar estoque ─────────
+  const handleDataSubmit = async (e) => {
+    e.preventDefault();
+    setReserving(true);
+    setStockError(null);
+
+    try {
+      const result = await reserveCartItems(cart);
+
+      if (!result.ok) {
+        setStockError(result.unavailable);
+        setReserving(false);
+        return;
+      }
+
+      // Estoque reservado com sucesso — criar pedido
+      const newOrderId = await createOrder({
+        customer: { name: formData.name, email: formData.email, phone: formData.phone },
+        address:  { address: formData.address, city: formData.city, state: formData.state, zip: formData.zip },
+        items: cart,
+        total,
+      });
+
+      setReservationIds(result.reservationIds);
+      setOrderId(newOrderId);
+      setStep(2);
+      canceledRef.current = false;
+      window.scrollTo(0, 0);
+    } catch (err) {
+      toast({ title: 'Erro ao processar pedido.', description: 'Tente novamente.', variant: 'destructive' });
+    } finally {
+      setReserving(false);
+    }
+  };
+
+  const handleCopyPix = () => {
+    navigator.clipboard.writeText(config.pixKey);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+    toast({ title: 'Chave PIX copiada!' });
+  };
+
+  const handleSendWhatsapp = () => openWhatsapp({ orderId, items: cart, total });
+
+  // ── Confirmar pagamento: baixa estoque definitivamente ────
+  const handleConfirmPayment = async () => {
+    clearInterval(timerRef.current);
+    canceledRef.current = true;
+    await confirmReservations(reservationIds, orderId);
+    clearCart();
+    navigate(`/order-confirmation?orderId=${orderId}&total=${total.toFixed(2)}`);
+  };
+
+  // ── Voltar: cancelar reservas ────────────────────────────
+  const handleBack = async () => {
+    clearInterval(timerRef.current);
+    canceledRef.current = true;
+    await cancelReservations(reservationIds);
+    setReservationIds([]);
+    setStep(1);
+  };
+
   if (cart.length === 0) return (
     <div className="container mx-auto section-padding container-padding text-center min-h-[60vh] flex flex-col items-center justify-center">
       <ShoppingBag className="w-16 h-16 text-muted-foreground/40 mb-4" />
@@ -44,25 +146,6 @@ const CheckoutPage = () => {
       </Button>
     </div>
   );
-
-  const handleDataSubmit = (e) => {
-    e.preventDefault();
-    setStep(2);
-    window.scrollTo(0, 0);
-  };
-
-  const handleCopyPix = () => {
-    navigator.clipboard.writeText(PIX_KEY);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-    toast({ title: 'Chave PIX copiada!' });
-  };
-
-  const handleConfirmPayment = () => {
-    const orderId = `1WRLD-${Date.now().toString().slice(-6)}`;
-    clearCart();
-    navigate(`/order-confirmation?orderId=${orderId}&total=${total.toFixed(2)}`);
-  };
 
   return (
     <div className="container mx-auto section-padding container-padding">
@@ -87,14 +170,31 @@ const CheckoutPage = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
-
-        {/* ── COLUNA ESQUERDA ─────────────────────────────── */}
         <div className="flex-1 min-w-0">
 
-          {/* STEP 1 — Dados pessoais e endereço */}
+          {/* STEP 1 — Dados */}
           {step === 1 && (
             <motion.form onSubmit={handleDataSubmit} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }}
               className="bg-card border border-border/50 rounded-lg p-6 space-y-6">
+
+              {/* Aviso de estoque indisponível */}
+              {stockError && (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0" />
+                    <p className="text-sm font-semibold text-red-400">Itens indisponíveis no estoque</p>
+                  </div>
+                  {stockError.map((item, i) => (
+                    <p key={i} className="text-xs text-red-300/80 ml-6">
+                      {item.name} — Tamanho {item.size}
+                      {item.available === 0 ? ' (esgotado)' : ` (apenas ${item.available} disponível)`}
+                    </p>
+                  ))}
+                  <p className="text-xs text-muted-foreground mt-2 ml-6">
+                    Volte ao carrinho e ajuste as quantidades.
+                  </p>
+                </div>
+              )}
 
               <div>
                 <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-lg">
@@ -140,8 +240,9 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
-              <Button type="submit" size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold tracking-wider">
-                Continuar para Pagamento →
+              <Button type="submit" size="lg" disabled={reserving}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold tracking-wider">
+                {reserving ? 'Verificando estoque...' : 'Continuar para Pagamento →'}
               </Button>
             </motion.form>
           )}
@@ -151,11 +252,30 @@ const CheckoutPage = () => {
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }}
               className="bg-card border border-border/50 rounded-lg p-6">
 
-              <h2 className="font-semibold text-foreground mb-6 flex items-center gap-2 text-lg">
+              <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2 text-lg">
                 <QrCode className="h-5 w-5 text-primary" /> Pagamento via PIX
               </h2>
 
-              {/* Instruções */}
+              {/* Cronômetro de reserva */}
+              <div className={`flex items-center justify-between rounded-lg px-4 py-3 mb-5 border ${
+                timeLeft < 120 ? 'bg-red-500/10 border-red-500/30' : 'bg-yellow-500/10 border-yellow-500/30'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <Clock className={`h-4 w-4 ${timeLeft < 120 ? 'text-red-400' : 'text-yellow-400'}`} />
+                  <span className="text-xs text-muted-foreground">Itens reservados por</span>
+                </div>
+                <span className={`font-mono font-bold text-lg ${timeLeft < 120 ? 'text-red-400' : 'text-yellow-400'}`}>
+                  {fmtTime(timeLeft)}
+                </span>
+              </div>
+
+              {orderId && (
+                <div className="bg-primary/10 border border-primary/30 rounded-lg px-4 py-3 mb-5 flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider">Seu pedido</span>
+                  <span className="font-mono font-bold text-primary text-sm">{orderId}</span>
+                </div>
+              )}
+
               <div className="space-y-3 mb-6">
                 {[
                   'Abra o app do seu banco',
@@ -170,46 +290,56 @@ const CheckoutPage = () => {
                 ))}
               </div>
 
-              {/* Chave PIX */}
               <div className="bg-muted/30 border border-border/50 rounded-lg p-5 mb-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Chave PIX (e-mail)</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+                  Chave PIX ({config.pixKeyType})
+                </p>
                 <div className="flex items-center gap-3">
-                  <p className="font-mono text-accent font-semibold flex-1 text-sm break-all">{PIX_KEY}</p>
+                  <p className="font-mono text-accent font-semibold flex-1 text-sm break-all">{config.pixKey}</p>
                   <Button size="sm" variant="outline" onClick={handleCopyPix}
                     className={`flex-shrink-0 border-primary/30 transition-colors ${copied ? 'border-green-500/50 text-green-400' : 'text-primary hover:bg-primary/10'}`}>
                     {copied ? <><Check className="h-3.5 w-3.5 mr-1" /> Copiado!</> : <><Copy className="h-3.5 w-3.5 mr-1" /> Copiar</>}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground mt-3">Titular: <span className="text-foreground font-medium">{PIX_NAME}</span></p>
+                <p className="text-xs text-muted-foreground mt-3">Titular: <span className="text-foreground font-medium">{config.pixReceiverName}</span></p>
                 <p className="text-xs text-muted-foreground">Valor: <span className="text-accent font-bold font-mono">R$ {fmt(total)}</span></p>
               </div>
 
-              {/* QR Code placeholder */}
-              <div className="w-44 h-44 mx-auto mb-6 border-2 border-border/40 rounded-lg flex items-center justify-center bg-white">
-                <div className="text-center">
-                  <QrCode className="h-20 w-20 text-gray-800 mx-auto" />
-                  <p className="text-[10px] text-gray-500 mt-1">QR Code</p>
+              {config.pixQrCodeUrl ? (
+                <div className="w-44 h-44 mx-auto mb-6 border-2 border-border/40 rounded-lg overflow-hidden">
+                  <img src={config.pixQrCodeUrl} alt="QR Code PIX" className="w-full h-full object-contain bg-white p-2" />
                 </div>
-              </div>
+              ) : (
+                <div className="w-44 h-44 mx-auto mb-6 border-2 border-border/40 rounded-lg flex items-center justify-center bg-white">
+                  <div className="text-center">
+                    <QrCode className="h-20 w-20 text-gray-800 mx-auto" />
+                    <p className="text-[10px] text-gray-500 mt-1">QR Code</p>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-3">
+                <Button onClick={handleSendWhatsapp} size="lg" variant="outline"
+                  className="w-full border-green-500/50 text-green-400 hover:bg-green-500/10 font-semibold tracking-wider">
+                  <MessageCircle className="h-5 w-5 mr-2" /> Enviar pedido via WhatsApp
+                </Button>
                 <Button onClick={handleConfirmPayment} size="lg"
                   className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold tracking-wider">
                   <Check className="h-5 w-5 mr-2" /> Já Paguei — Confirmar Pedido
                 </Button>
-                <Button variant="ghost" onClick={() => setStep(1)} className="w-full text-muted-foreground hover:text-foreground text-sm">
+                <Button variant="ghost" onClick={handleBack} className="w-full text-muted-foreground hover:text-foreground text-sm">
                   ← Voltar e editar dados
                 </Button>
               </div>
 
               <p className="text-xs text-muted-foreground text-center mt-4">
-                Após a confirmação do pagamento, você receberá a confirmação do pedido por e-mail.
+                Após a confirmação do pagamento, você receberá a confirmação do pedido.
               </p>
             </motion.div>
           )}
         </div>
 
-        {/* ── RESUMO DO PEDIDO (direita) ───────────────────── */}
+        {/* Resumo */}
         <div className="w-full lg:w-80 flex-shrink-0">
           <div className="bg-card border border-border/50 rounded-lg p-6 sticky top-24">
             <h2 className="font-semibold text-foreground mb-4 pb-3 border-b border-border/40">Resumo</h2>
@@ -247,7 +377,6 @@ const CheckoutPage = () => {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

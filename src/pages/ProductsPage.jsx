@@ -3,12 +3,13 @@ import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import FilterSidebar from '@/components/products/FilterSidebar';
 import ProductGrid from '@/components/products/ProductGrid';
+import { useProducts } from '@/contexts/ProductsContext';
 
 const ProductsPage = () => {
 
   const location = useLocation();
+  const { products: productsFromContext } = useProducts();
 
-  const [productsFromApi, setProductsFromApi] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,29 +17,6 @@ const ProductsPage = () => {
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
 
-  // Buscar produtos da API
-  useEffect(() => {
-  fetch("http://localhost:8080/products")
-    .then(res => res.json())
-    .then(data => {
-
-      const formattedProducts = data.map(p => ({
-        id: p.id,
-        name: p.name,
-        price: p.price,
-        description: p.description,
-
-        image: "/images/placeholder.png",
-        category: "Roupas",
-        colors: ["preto"],
-        availableSizes: ["M"]
-      }));
-
-      setProductsFromApi(formattedProducts);
-      setFilteredProducts(formattedProducts);
-    });
-
-}, []);
   // Ler parâmetros da URL
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -52,7 +30,7 @@ const ProductsPage = () => {
   // Aplicar filtros
   const applyFilters = useCallback(() => {
 
-    let result = productsFromApi;
+    let result = productsFromContext;
 
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
@@ -77,7 +55,7 @@ const ProductsPage = () => {
 
     setFilteredProducts(result);
 
-  }, [productsFromApi, searchTerm, selectedCategory, selectedSizes]);
+  }, [productsFromContext, searchTerm, selectedCategory, selectedSizes]);
 
   useEffect(() => {
     applyFilters();

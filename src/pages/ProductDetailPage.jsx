@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Plus, Minus, ShoppingCart, ArrowLeft, Packag
 import { useToast }    from '@/components/ui/use-toast';
 import { CartContext } from '@/contexts/CartContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { allProductsData } from '@/data/products';
+import { useProducts } from '@/contexts/ProductsContext';
 import ProductCard     from '@/components/products/ProductCard';
 
 const ProductDetailPage = () => {
@@ -16,8 +16,9 @@ const ProductDetailPage = () => {
   const { toast }     = useToast();
   const { addToCart } = useContext(CartContext);
 
-  // TODO (backend): substituir por fetch('/api/products/' + id)
-  const product = allProductsData.find(p => p.id.toString() === id);
+
+  const { products } = useProducts();
+  const product = products.find(p => p.id.toString() === id);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity,          setQuantity         ] = useState(1);
@@ -52,7 +53,7 @@ const ProductDetailPage = () => {
     toast({ title: '✓ Adicionado ao carrinho', description: `${product.name}${selectedSize ? ` · ${selectedSize}` : ''}` });
   };
 
-  const relatedProducts = allProductsData.filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
+  const relatedProducts = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
 
   return (
     <div className="container mx-auto section-padding container-padding">

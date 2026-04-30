@@ -1,10 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { CartProvider }          from '@/contexts/CartContext';
-import Navbar                    from '@/components/shared/Navbar';
-import Footer                    from '@/components/shared/Footer';
-import { Toaster }               from '@/components/ui/toaster';
+import { AuthProvider, useAuth }           from '@/contexts/AuthContext';
+import { CartProvider }                    from '@/contexts/CartContext';
+import { OrdersProvider }                  from '@/contexts/OrdersContext';
+import { StoreConfigProvider }             from '@/contexts/StoreConfigContext';
+import { ProductsProvider }               from '@/contexts/ProductsContext';
+import Navbar                              from '@/components/shared/Navbar';
+import Footer                              from '@/components/shared/Footer';
+import { Toaster }                         from '@/components/ui/toaster';
 
 import HomePage              from '@/pages/HomePage';
 import ProductsPage          from '@/pages/ProductsPage';
@@ -61,11 +64,17 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
-      </CartProvider>
+      <StoreConfigProvider>
+        <ProductsProvider>
+        <OrdersProvider>
+          <CartProvider>
+            <Router>
+              <AppRoutes />
+            </Router>
+          </CartProvider>
+        </OrdersProvider>
+        </ProductsProvider>
+      </StoreConfigProvider>
     </AuthProvider>
   );
 }
